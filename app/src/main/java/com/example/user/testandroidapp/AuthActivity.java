@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,20 +36,23 @@ import javax.net.ssl.HttpsURLConnection;
 
 
 public class AuthActivity extends AppCompatActivity {
-
+    public static final String ACCESS_TOKEN = "myPreference";
     public EditText login;
     public EditText pass;
     String region = "RU";
     String log = "log";
+    SharedPreferences mySharedPreferences;
+    SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
-
+        mySharedPreferences = getSharedPreferences(ACCESS_TOKEN, MODE_PRIVATE);
         Button btn = (Button) findViewById(R.id.button1);
         login = (EditText) findViewById(R.id.editText1);
         login.setText("+7");
+        login.setSelection(login.getText().length());
         pass = (EditText) findViewById(R.id.editText2);
         btn.setOnClickListener(new OnClickListener() {
 
@@ -59,11 +63,11 @@ public class AuthActivity extends AppCompatActivity {
                  if (isMobileNumberValid(strLogin, region))
 
                      try {
-                         SingletonUser.getInstance().setLogin(login.getText().toString());
-                         SingletonUser.getInstance().setPassword(pass.getText().toString());
                          new PostAuthentication().execute();
 
                      } catch (Exception e) {
+                         Toast.makeText(getApplicationContext(), e.toString(),
+                                 Toast.LENGTH_LONG).show();
                      }
                      else
                      Toast.makeText(getApplicationContext(), "Такого номера не существует",
@@ -77,6 +81,7 @@ public class AuthActivity extends AppCompatActivity {
         });
         }
 
+        //валидация номера телефона
     public boolean isMobileNumberValid(String phoneNumber, String defaultRegion)
     {
         PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
@@ -95,18 +100,19 @@ public class AuthActivity extends AppCompatActivity {
 
         return false;
     }
-
+//запрос на авторизацию
     public class PostAuthentication extends AsyncTask<String, Void, String> {
         private  String server = "nightlybuilds.i-retail.freematiq.com";
         private  String authentication = "/api/user/authentication";
-        public  boolean remember_me = false;
+        private  boolean remember_me = false;
+        boolean status;
         protected void onPreExecute(){}
 
         protected String doInBackground(String... arg0) {
             try{
                 String myURL = "https://"+server+authentication;
                 URL url = new URL(myURL);
-
+                status = false;
                 JSONObject postDataParams = new JSONObject();
                 postDataParams.put("client_id", SingletonUser.getInstance().getClient_id());
                 postDataParams.put("client_secret", SingletonUser.getInstance().getClient_secret());
@@ -124,7 +130,8 @@ public class AuthActivity extends AppCompatActivity {
                 OutputStream os = conn.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, "UTF-8"));
-                writer.write(getPostDataString(postDataParams));
+                PostData postData = new PostData();
+                writer.write(postData.getPostDataString(postDataParams));
 
                 writer.flush();
                 writer.close();
@@ -146,13 +153,20 @@ public class AuthActivity extends AppCompatActivity {
                         sb.append(line);
                         break;
                     }
-
+                    Log.e(log,sb.toString());
                     in.close();
                     JSONObject jsonObject = new JSONObject(sb.toString());
-                    jsonObject.get("result");
-                    SingletonUser.getInstance()
-                            .setAccess_token( jsonObject.getJSONObject("result").get("access_token").toString());
-                    return null;
+                    status = (boolean)jsonObject.get("status");
+                    if (status == true) {
+                        editor = mySharedPreferences.edit();
+                        editor.putString("access_token",jsonObject.getJSONObject("result").get("access_token").toString());
+                        editor.apply();
+                        Log.e(log,"Загружаем данные");
+                        return new String("Загружаем данные");
+
+                    }
+                    else
+                        return new String("Неверный логин или пароль");
 
                 }
                 else {
@@ -167,38 +181,18 @@ public class AuthActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-
-            Intent intent = new Intent(AuthActivity.this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-        }
-    }
-
-    public String getPostDataString(JSONObject params) throws Exception {
-
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-
-        Iterator<String> itr = params.keys();
-
-        while(itr.hasNext()){
-
-            String key= itr.next();
-            Object value = params.get(key);
-
-            if (first)
-                first = false;
+            Log.e(log,result);
+            if (status) {
+                Intent intent = new Intent(AuthActivity.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }
             else
-                result.append("&");
-
-            result.append(URLEncoder.encode(key, "UTF-8"));
-            result.append("=");
-            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
+                Toast.makeText(getApplicationContext(), result,
+                        Toast.LENGTH_LONG).show();
 
         }
-        return result.toString();
     }
-
 
 }
 

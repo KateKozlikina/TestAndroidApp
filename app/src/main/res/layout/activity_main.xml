@@ -10,7 +10,7 @@
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/app_bar_height"
+        android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
         android:theme="@style/AppTheme.AppBarOverlay">
 
@@ -37,32 +37,35 @@
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingLeft="20dp"
+        android:paddingRight="10dp"
         android:paddingTop="200dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp">
+        >
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent">
 
             <TextView
                 android:id="@+id/textTitleName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Name:" />
+
             <TextView
                 android:id="@+id/textUserName"
+                style="@style/MyTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="user"
-                />
+                tools:text="user" />
 
 
         </TableRow>
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent">
+
             <TextView
                 android:id="@+id/textTitlePhone"
                 android:layout_width="match_parent"
@@ -71,28 +74,27 @@
 
             <TextView
                 android:id="@+id/textUserPhone"
+                style="@style/MyTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/editText2"
-                android:layout_alignParentLeft="true"
                 tools:text="number" />
         </TableRow>
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent">
+
             <TextView
                 android:id="@+id/textTitleEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Email:" />
+                android:text="Email: " />
 
             <TextView
                 android:id="@+id/textUserEmail"
+                style="@style/MyTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/editText2"
-                android:layout_alignParentLeft="true"
                 tools:text="email" />
         </TableRow>
 

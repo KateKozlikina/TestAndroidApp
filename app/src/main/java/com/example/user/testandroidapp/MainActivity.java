@@ -41,15 +41,18 @@ public class MainActivity extends AppCompatActivity {
         textName = (TextView) findViewById(R.id.textUserName);
         textPhone = (TextView) findViewById(R.id.textUserPhone);
         textEmail = (TextView) findViewById(R.id.textUserEmail);
-        String accessToken;
-        if(SingletonUser.getInstance().getAccess_token()==null)
-          accessToken =  mySharedPreferences.getString("access_token", null);
-        else
-            accessToken = SingletonUser.getInstance().getAccess_token();
 
-        Log.e(log,"accessToken:"+accessToken);
-     if (accessToken != null) {
-         SingletonUser.getInstance().setFlqAuth(true);
+//                = SingletonUser.getInstance().getAccess_token() ;
+//        if(SingletonUser.getInstance().getAccess_token()==null)
+          SingletonUser.getInstance().setAccess_token( mySharedPreferences.getString("access_token", null));
+//        else
+//            editor.putString("access_token", null);
+//        editor.apply();
+//            accessToken = SingletonUser.getInstance().getAccess_token();
+
+        Log.e(log,"accessToken:"+SingletonUser.getInstance().getAccess_token());
+     if (SingletonUser.getInstance().getAccess_token() != null) {
+         //SingletonUser.getInstance().setFlqAuth(true);
          try {
              new SendPostRequest().execute();
          } catch (Exception e) {
@@ -64,16 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        String at =  SingletonUser.getInstance().getAccess_token();
-        if (at!=null) {
-            editor = mySharedPreferences.edit();
-            editor.putString("access_token", at);
-            editor.apply();
-        }
-    }
 
     public class SendPostRequest extends AsyncTask<String, Void, String> {
         private  String server = "nightlybuilds.i-retail.freematiq.com";
@@ -103,7 +96,8 @@ public class MainActivity extends AppCompatActivity {
                 OutputStream os = conn.getOutputStream();
                 BufferedWriter writer = new BufferedWriter(
                         new OutputStreamWriter(os, "UTF-8"));
-                writer.write(getPostDataString(postDataParams));
+                PostData postData = new PostData();
+                writer.write(postData.getPostDataString(postDataParams));
                 writer.flush();
                 writer.close();
                 os.close();
@@ -123,11 +117,14 @@ public class MainActivity extends AppCompatActivity {
                     in.close();
                     Log.e("log",sb.toString());
                     JSONObject jsonObject = new JSONObject(sb.toString());
-                    if (jsonObject.get("status").toString()=="false") {
+                    boolean status = (boolean) jsonObject.get("status");
+                    if (!status) {
+                        editor = mySharedPreferences.edit();
                         editor.putString("access_token", null);
                         editor.apply();
-                        Log.e("log","Обнуляем access token");
                         SingletonUser.getInstance().setAccess_token(null);
+                        Log.e("log","Обнуляем access token");
+                       // SingletonUser.getInstance().setAccess_token(null);
                     }
                     else {
                         SingletonUser.getInstance().setName(jsonObject.getJSONObject("result").get("name").toString());
@@ -161,25 +158,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
-    }
-
-    public String getPostDataString(JSONObject params) throws Exception {
-
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-        Iterator<String> itr = params.keys();
-        while(itr.hasNext()){
-            String key= itr.next();
-            Object value = params.get(key);
-            if (first)
-                first = false;
-            else
-                result.append("&");
-            result.append(URLEncoder.encode(key, "UTF-8"));
-            result.append("=");
-            result.append(URLEncoder.encode(value.toString(), "UTF-8"));
-        }
-        return result.toString();
     }
 
 }
