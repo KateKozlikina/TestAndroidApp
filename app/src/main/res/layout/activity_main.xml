@@ -39,8 +39,7 @@
         android:layout_height="wrap_content"
         android:paddingLeft="20dp"
         android:paddingRight="10dp"
-        android:paddingTop="200dp"
-        >
+        android:paddingTop="100dp">
 
         <TableRow
             android:layout_width="match_parent"
